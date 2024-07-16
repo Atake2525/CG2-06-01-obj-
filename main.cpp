@@ -106,6 +106,7 @@ ModelData LoadObjFile(const std::string& directoryPath, const std::string& filen
 		}
 		else if (identifier == "f"){
 			VertexData triangle[3];
+
 			// 面は三角形限定。その他は未対応
 			for (int32_t faceVertex = 0; faceVertex < 3; ++faceVertex){
 				std::string vertexDefinition;
@@ -113,7 +114,7 @@ ModelData LoadObjFile(const std::string& directoryPath, const std::string& filen
 				// 頂点の要素へのIndexは「位置/UV/法線」で格納されているので、分解してIndexを取得する
 				std::istringstream v(vertexDefinition);
 				uint32_t elementIndices[3];
-				for (int32_t element = 0; element < 3; element++){
+				for (int32_t element = 0; element < 3; ++element){
 					std::string index;
 					std::getline(v, index, '/'); // /区切りでインデックスを読んでいく
 					elementIndices[element] = std::stoi(index);
@@ -125,6 +126,7 @@ ModelData LoadObjFile(const std::string& directoryPath, const std::string& filen
 				//VertexData vertex = { position, texcoord, normal };
 				//modelData.vertices.push_back(vertex);
 				position.x *= -1.0f;
+				texcoord.y = 1.0f - texcoord.y;
 				normal.x *= -1.0f;
 				triangle[faceVertex] = { position, texcoord, normal };
 			}
@@ -699,8 +701,8 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	// バッファの場合はこれにする決まり
 	vertexResourceDesc.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
 
-	/*// モデル読み込み
-	ModelData modelData = LoadObjFile("Resources", "plane.obj");
+	// モデル読み込み
+	ModelData modelData = LoadObjFile("Resources", "axis.obj");
 	DirectX::ScratchImage mipImages2 = LoadTexture(modelData.material.textureFilePath);
 	// 実際に頂点リソースを作る
 	ID3D12Resource* vertexResource = CreateBufferResource(device, sizeof(VertexData) * modelData.vertices.size());
@@ -716,7 +718,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	VertexData* vertexData = nullptr;
 	// 書き込むためのアドレスを取得
 	vertexResource->Map(0, nullptr, reinterpret_cast<void**>(&vertexData));
-	std::memcpy(vertexData, modelData.vertices.data(), sizeof(VertexData) * modelData.vertices.size()); // 頂点データをリソースにコピー*/
+	std::memcpy(vertexData, modelData.vertices.data(), sizeof(VertexData) * modelData.vertices.size()); // 頂点データをリソースにコピー
 
 
 
@@ -904,7 +906,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	
 
 	
-	// 頂点リソースを作る
+	/*// 頂点リソースを作る
 	ID3D12Resource* vertexResource = CreateBufferResource(device, sizeof(VertexData) * 6);
 	// 頂点バッファービューを作成する
 	D3D12_VERTEX_BUFFER_VIEW vertexBufferView{};
@@ -916,12 +918,12 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	VertexData* vertexData = nullptr;
 	// 書き込むためのアドレスを取得
 	vertexResource->Map(0, nullptr, reinterpret_cast<void**>(&vertexData));
-	//// 左下
-	//vertexData[0] = { -0.5f, -0.5f, 0.0f, 1.0f };
-	//// 上
-	//vertexData[1] = { 0.0f, 0.5f, 0.0f, 1.0f };
-	//// 右下
-	//vertexData[2] = { 0.5f, -0.5f, 0.0f, 1.0f };
+	// 左下
+	vertexData[0] = { -0.5f, -0.5f, 0.0f, 1.0f };
+	// 上
+	vertexData[1] = { 0.0f, 0.5f, 0.0f, 1.0f };
+	// 右下
+	vertexData[2] = { 0.5f, -0.5f, 0.0f, 1.0f };
 
 
 	// 左下
@@ -942,7 +944,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	vertexData[4].texcoord = { 0.5f, 0.0f };
 	// 右下2
 	vertexData[5].position = { 0.5f, -0.5f, -0.5f, 1.0f };
-	vertexData[5].texcoord = { 1.0f, 1.0f };
+	vertexData[5].texcoord = { 1.0f, 1.0f };*/
 
 
 	
@@ -1217,16 +1219,16 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			commandList->DrawInstanced(6, 1, 0, 0);
 
 			//Spriteの描画。変更が必要なものだけ変更する
-			commandList->IASetVertexBuffers(0, 1, &vertexBufferViewSprite); // VBVを設定
+			//commandList->IASetVertexBuffers(0, 1, &vertexBufferViewSprite); // VBVを設定
 			// マテリアルCBufferの場所を設定
 			commandList->SetGraphicsRootConstantBufferView(0, materialResourceSprite->GetGPUVirtualAddress());
 			// TransformationMatrixCBbufferの場所を設定
 			commandList->SetGraphicsRootConstantBufferView(1, transformationMatrixResourceSprite->GetGPUVirtualAddress());
 			// 描画
-			commandList->DrawInstanced(6, 1, 0, 0);
+			//commandList->DrawInstanced(6, 1, 0, 0);
 
 			// ModelData描画
-			//commandList->DrawInstanced(UINT(modelData.vertices.size()), 1, 0, 0);
+			commandList->DrawInstanced(UINT(modelData.vertices.size()), 1, 0, 0);
 			 
 			// 実際のcommandListのImGuiの描画コマンドを積む
 			ImGui_ImplDX12_RenderDrawData(ImGui::GetDrawData(), commandList);
